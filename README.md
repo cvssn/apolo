@@ -7,7 +7,9 @@
 
 #### windows
 
-extraia o pacote zip. rode `apolo.exe` diretamente com seu path.
+extraia o pacote zip.
+
+para utilizar o apolo, você pode rodar `apolo.exe` diretamente com seu path,
 ou adicione opcionalmente esse diretório para o path de ambiente para então rodar `apolo` em qualquer lugar.
 
 #### linux e macos
