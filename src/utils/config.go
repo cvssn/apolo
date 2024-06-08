@@ -1,9 +1,6 @@
-package config
+package utils
 
 import (
-	"errors"
-	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -11,9 +8,21 @@ import (
 	"github.com/go-ini/ini"
 )
 
+type config struct {
+	path    string
+	content *ini.File
+}
+
+// configuração
+type Config interface {
+	Write()
+	GetSection(string) *ini.Section
+	GetPath() string
+}
+
 // parseconfig lê o conteúdo do arquivo de configuração, retornando
 // configuração padrão se o arquivo não existir
-func ParseConfig(configPath string) *ini.File {
+func ParseConfig(configPath string) Config {
 	cfg, err := ini.LoadSources(
 		ini.LoadOptions{
 			IgnoreContinuation: true,
@@ -22,20 +31,41 @@ func ParseConfig(configPath string) *ini.File {
 		configPath)
 
 	if err != nil {
-		defaultConfig := getDefaultConfig()
-		WriteConfig(defaultConfig, configPath)
+		defaultConfig := config{
+			path:    configPath,
+			content: getDefaultConfig(),
+		}
 
-		fmt.Println("configuração padrão gerada!")
+		defaultConfig.Write()
+
+		PrintSuccess("configuração padrão gerada!")
 
 		return defaultConfig
 	}
 
-	return cfg
+	return config{
+		path:    configPath,
+		content: cfg,
+	}
 }
 
-// writeconfig escreve o conteúdo para o arquivo de configuração
-func WriteConfig(content *ini.File, configPath string) {
-	content.SaveTo(configPath)
+// escreve conteúdos de escrita para o arquivo de configuração
+func (c config) Write() {
+	c.content.SaveTo(c.path)
+}
+
+func (c config) GetSection(name string) *ini.Section {
+	sec, err := c.content.GetSection(name)
+
+	if err != nil {
+		Fatal(err)
+	}
+
+	return sec
+}
+
+func (c config) GetPath() string {
+	return c.path
 }
 
 func getDefaultConfig() *ini.File {
@@ -54,8 +84,6 @@ func getDefaultConfig() *ini.File {
 		defaultSpotifyPath = filepath.Join("/usr", "share", "spotify")
 	} else if runtime.GOOS == "darwin" {
 		defaultSpotifyPath = filepath.Join("/Applications", "Spotify.app", "Contents", "Resources")
-	} else {
-		log.Fatal(errors.New("sistema operacional não suportado"))
 	}
 
 	setting.NewKey("spotify_path", defaultSpotifyPath)

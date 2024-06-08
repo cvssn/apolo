@@ -1,4 +1,4 @@
-package color
+package utils
 
 import (
 	"fmt"
@@ -7,12 +7,20 @@ import (
 	"strings"
 )
 
-type Color struct {
-	RGB string
-	Hex string
+type color struct {
+	rgbValue string
+	hexValue string
 }
 
-func Parse(raw string) Color {
+// color armazena o valor hex e rgb da cor
+type Color interface {
+	Hex() string
+	RGB() string
+}
+
+// parsecolor analisa uma string em ambos (hex ou rgb)
+// e converte para ambos os valores hex e rgb
+func ParseColor(raw string) Color {
 	var red int64
 	var green int64
 	var blue int64
@@ -80,7 +88,15 @@ func Parse(raw string) Color {
 		blue = 255
 	}
 
-	return Color{
-		RGB: fmt.Sprintf("%d,%d,%d", red, green, blue),
-		Hex: fmt.Sprintf("%02x%02x%02x", red, green, blue)}
+	return color{
+		rgbValue: fmt.Sprintf("%d,%d,%d", red, green, blue),
+		hexValue: fmt.Sprintf("%02x%02x%02x", red, green, blue)}
+}
+
+func (c color) Hex() string {
+	return c.hexValue
+}
+
+func (c color) RGB() string {
+	return c.rgbValue
 }

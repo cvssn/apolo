@@ -13,17 +13,20 @@ import (
 
 // flag habilita/desabilita pré-processos a serem aplicados
 type Flag struct {
+	// disablesentry impede que o sentry envie log/erro/aviso do console para desenvolvedores do spotify
 	DisableSentry  bool
+
+	// disablelogging interrompe vários elementos para registrar a interação do usuário
 	DisableLogging bool
+
+	// removertl remove todas as regras css da direita para a esquerda para simplificar os arquivos css
 	RemoveRTL      bool
+
+	// exposeapis rouba algumas apis, funções, objetos do spotify para o objeto global apolo
 	ExposeAPIs     bool
 }
 
 // começa o pré-processamento ativos de aplicativos em extractapppath
-//
-// disablesentry: impede que o sentry envie log/erro/aviso do console para desenvolvedores do spotify
-// disablelogging: interrompe vários elementos para registrar a interação do usuário
-// removertl: remove todas as regras css da direita para a esquerda para simplificar os arquivos css
 func Start(extractedAppsPath string, flags Flag, callback func(appName string, err error)) {
 	appList, err := ioutil.ReadDir(extractedAppsPath)
 
@@ -87,7 +90,7 @@ func Start(extractedAppsPath string, flags Flag, callback func(appName string, e
 		})
 
 		if appName == "zlink" && flags.ExposeAPIs {
-			utils.RunCopy(utils.GetJsHelperDir(), appPath, false, []string{"apoloWrapper.js"})
+			utils.RunCopy(utils.GetJsHelperDir(), appPath, []string{"apoloWrapper.js"})
 		}
 
 		if err != nil {
@@ -290,7 +293,7 @@ func findSymbol(debugInfo, content string, clues []string) []string {
 		}
 	}
 
-	utils.PrintColor("red", false, "\nnão foi possível encontrar um símbolo para "+debugInfo)
+	utils.PrintError("não foi possível encontrar o símbolo para " + debugInfo)
 	
 	return nil
 }

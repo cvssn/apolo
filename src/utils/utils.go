@@ -15,84 +15,8 @@ import (
 	"runtime"
 	"strings"
 
-	"gopkg.in/cheggaaa/pb.v2"
-
-	backupStatus "../status/backup"
-	spotifyStatus "../status/spotify"
-
 	"github.com/go-ini/ini"
-	"github.com/logrusorgru/aurora"
 )
-
-func GetSpotifyStatus(spotifyPath string) spotifyStatus.Enum {
-	appsFolder := filepath.Join(spotifyPath, "Apps")
-	fileList, err := ioutil.ReadDir(appsFolder)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	spaCount := 0
-	dirCount := 0
-
-	for _, file := range fileList {
-		if file.IsDir() {
-			dirCount++
-
-			continue
-		}
-
-		if strings.HasSuffix(file.Name(), ".spa") {
-			spaCount++
-		}
-	}
-
-	totalFiles := len(fileList)
-
-	if spaCount == totalFiles {
-		return spotifyStatus.STOCK
-	}
-
-	if dirCount == totalFiles {
-		return spotifyStatus.APPLIED
-	}
-	
-	return spotifyStatus.INVALID
-}
-
-func GetBackupStatus(spotifyPath, backupPath, backupVersion string) backupStatus.Enum {
-	fileList, err := ioutil.ReadDir(backupPath)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if len(fileList) == 0 {
-		return backupStatus.EMPTY
-	}
-
-	spotifyVersion := GetSpotifyStatus(spotifyPath)
-
-	if backupVersion != spotifyVersion {
-		return backupStatus.OUTDATED
-	}
-
-	spaCount := 0
-
-	for _, file := range fileList {
-		if !file.IsDir() && strings.HasSuffix(file.Name(), ".spa") {
-			spaCount++
-		}
-	}
-
-	if spaCount > 0 {
-		return backupStatus.BACKUPED
-	}
-
-	os.RemoveAll(backupPath)
-
-	return backupStatus.EMPTY
-}
 
 // readanswer printa um form sim/não com uma string de `info`
 // e retorna um valor booleano baseado no input do usuário (y/Y ou n/N) ou
@@ -120,6 +44,8 @@ func ReadAnswer(info string, defaultAnswer bool) bool {
 	return ReadAnswer(info, defaultAnswer)
 }
 
+// checkexistandcreate checa a existência da pasta
+// ou então cria essa pasta caso ela não exista
 func CheckExistAndCreate(dir string) {
 	_, err := os.Stat(dir)
 
@@ -128,6 +54,7 @@ func CheckExistAndCreate(dir string) {
 	}
 }
 
+// unzip descompacta arquivos zips
 func Unzip(src, dest string) error {
 	r, err := zip.OpenReader(src)
 
@@ -184,16 +111,16 @@ func Unzip(src, dest string) error {
 	return nil
 }
 
+// replace usa regexp para encontrar qualquer coincidência do `input` com `regexpterm`
+// e troca eles por `replaceterm` e então retorna uma nova string
 func Replace(input string, regexpTerm string, replaceTerm string) string {
 	re := regexp.MustCompile(regexpTerm)
 
 	return re.ReplaceAllString(input, replaceTerm)
 }
 
-func GetBool(section *ini.Section, keyName string, defVal bool) bool {
-	return section.Key(keyName).MustInt(0) == 1
-}
-
+// modifyfile abre um arquivo, altera conteúdo de arquivo executando
+// a função de callback `repl` e escreve novo conteúdo
 func ModifyFile(path string, repl func(string) string) {
 	raw, err := ioutil.ReadFile(path)
 
@@ -207,6 +134,8 @@ func ModifyFile(path string, repl func(string) string) {
 	ioutil.WriteFile(path, []byte(content), 0644)
 }
 
+// getprefscfg encontra o arquivo `prefs` baseado do seu sistema operacional
+// e retorna uma ref `ini.file`
 func GetPrefsCfg(spotifyPath string) (*ini.File, string, error) {
 	var path string
 
@@ -229,6 +158,7 @@ func GetPrefsCfg(spotifyPath string) (*ini.File, string, error) {
 	return cfg, path, nil
 }
 
+// função getspotifyversion
 func GetSpotifyVersion(spotifyPath string) string {
 	pref, _, err := GetPrefsCfg(spotifyPath)
 
@@ -247,28 +177,7 @@ func GetSpotifyVersion(spotifyPath string) string {
 	return version.MustString("")
 }
 
-func GetDevToolStatus(spotifyPath string) bool {
-	pref, _, err := GetPrefsCfg(spotifyPath)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	rootSection, err := pref.GetSection("")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	devTool, err := rootSection.GetKey("app.enable-developer-mode")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return devTool.MustBool(false)
-}
-
+// setdevtool habilita/desabilita o modo de desenvolvedor no cliente spotify
 func SetDevTool(spotifyPath string, enable bool) {
 	pref, prefFilePath, err := GetPrefsCfg(spotifyPath)
 
@@ -294,43 +203,16 @@ func SetDevTool(spotifyPath string, enable bool) {
 	pref.SaveTo(prefFilePath)
 }
 
-func NewTracker(total int) *pb.ProgressBar {
-	return pb.ProgressBarTemplate(`{{counters . }} {{string . "appName" | green}}`).Start(total)
-}
-
-func PrintColor(color string, bold bool, text string) {
-	var value aurora.Value
-
-	switch color {
-	case "red":
-		value = aurora.Red(text)
-	case "green":
-		value = aurora.Green(text)
-	default:
-		return
-	}
-
-	if bold {
-		value = value.Bold()
-	}
-
-	log.Println(value)
-}
-
-func PrintBold(text string) {
-	log.Println(aurora.Bold(text))
-}
-
-func RunCopy(from, to string, recursive bool, filters []string) error {
+// runcopy copia todos os arquivos
+// ou usa `filters` para copiar certa quantidade de arquivos
+func RunCopy(from, to string, filters []string) error {
 	var cmd *exec.Cmd
 	var paraList = []string{from, to}
 
 	if runtime.GOOS == "windows" {
 		roboCopy := filepath.Join(os.Getenv("windir"), "System32\\robocopy.exe")
 
-		if recursive {
-			paraList = append(paraList, "/E")
-		}
+		paraList = append(paraList, "/E")
 
 		if filters != nil && len(filters) > 0 {
 			paraList = append(paraList, filters...)
@@ -362,6 +244,7 @@ func RunCopy(from, to string, recursive bool, filters []string) error {
 	return nil
 }
 
+// getexecutabledir retorna o diretório do processo atual
 func GetExecutableDir() string {
 	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
 		exe, err := os.Executable()
@@ -373,11 +256,21 @@ func GetExecutableDir() string {
 		return filepath.Dir(exe)
 	}
 
-	log.Fatal("sistema operacional não suportado")
-
 	return ""
 }
 
+// getjshelperdir retorna o diretório do jshelper no diretório executável
 func GetJsHelperDir() string {
 	return filepath.Join(GetExecutableDir(), "jsHelper")
+}
+
+// restartspotify
+func RestartSpotify(spotifyPath string) {
+	if runtime.GOOS == "windows" {
+		exec.Command("taskkill", "/F", "/IM", "spotify.exe").Run()
+		exec.Command(filepath.Join(spotifyPath, "spotify.exe")).Start()
+	} else if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+		exec.Command("pkill", "spotify").Run()
+		exec.Command(filepath.Join(spotifyPath, "spotify")).Start()
+	}
 }
