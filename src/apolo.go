@@ -98,6 +98,9 @@ func main() {
 		case "disable-devtool":
 			cmd.SetDevTool(false)
 
+		case "watch":
+			cmd.Watch()
+
 		default:
 			if argv[0] != '-' {
 				utils.PrintError(`comando "` + argv + `" não encontrado.`)
@@ -120,11 +123,14 @@ personaliza a interface e a funcionalidade do cliente spotify
 COMANDOS
 backup              inicia o backup e o pré-processamento dos arquivos do aplicativo
 apply               aplica a customização
+update              atualiza o css
 restore             restaura o spotify ao estado original
 clear               limpa os arquivos de backup atuais
 enable-devtool      habilita as ferramentas para desenvolvedores do cliente spotify,
                     (pressione ctrl + shift + i no cliente para começar a usar)
 disable-devtool     desativa as ferramentas de desenvolvedor do cliente spotify
+watch               entra no modo watch. automaticamente atualiza o css quando o
+					arquivo color.ini ou user.css for alterado
 
 FLAGS
 -q, --quiet         modo quieto (sem output). cuidado, operações perigosas como
