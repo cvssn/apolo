@@ -139,13 +139,13 @@ func.helpConfig() {
 	fmt.Print(`SIGNIFICADO DE CONFIGURAÇÃO
 [Setting]
 spotify_path
-	caminho para o diretório do spotify
+    caminho para o diretório do spotify
 	
 current_theme
-	nome da pasta do seu tema
+    nome da pasta do seu tema
 	
 inject_css
-	se o css personalizado de user.css na pasta do tema é aplicado
+    se o css personalizado de user.css na pasta do tema é aplicado
 	
 replace_colors
 	se as cores personalizadas são aplicadas
