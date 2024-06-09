@@ -301,43 +301,55 @@ func findSymbol(debugInfo, content string, clues []string) []string {
 func exposeAPIs(input string) string {
 	playerUI := findSymbol("playerUI", input, []string{
 		`([\w_]+)\.prototype\.updateProgressBarLabels`,
-		`([\w_]+)\.prototype\._onConnectionStateChange`})
+		`([\w_]+)\.prototype\._onConnectionStateChange`},
+	)
 
 	if playerUI != nil {
 		input = utils.Replace(
 			input,
+			
 			playerUI[0]+`\.prototype\.setup=function\(\)\{`,
-			"${0}"+apoloPlayerJS)
+			"${0}"+apoloPlayerJS,
+		)
 
 		// registra o evento de mundaça de progresso
 		input = utils.Replace(
 			input,
+
 			playerUI[0]+`\.prototype\._onProgressBarProgress=function.+?\{`,
-			`${0}Apolo.Player.dispatchEvent&&Apolo.Player.dispatchEvent(new Event("onprogress"));`)
+			`${0}Apolo.Player.dispatchEvent&&Apolo.Player.dispatchEvent(new Event("onprogress"));`,
+		)
 	}
 
 	// vazamento de metadados da faixa, estado do player e playlist atual para Apolo.Player.data
 	input = utils.Replace(
 		input,
+
 		`(const [\w_]+=([\w_]+)\.track\.metadata;)`,
-		`${1}Apolo.Player.data=${2};`)
+		`${1}Apolo.Player.data=${2};`,
+	)
 
 	// encontra o despachante de eventos (eventSymbol[0]) e o criador de evento (eventSymbol[1])
 	eventSymbols := findSymbol("EventDispatcher and Event Creatir", input, []string{
 		`([\w_]+)\.default\.dispatchEvent\(new ([\w_]+)\.default\([\w_]+\.default\.NAVIGATION_OPEN_URI`,
-		`([\w_]+)\.default\.dispatchEvent\(new ([\w_]+)\.default\("show\-notification\-bubble"`})
+		`([\w_]+)\.default\.dispatchEvent\(new ([\w_]+)\.default\("show\-notification\-bubble"`},
+	)
 
 	showNotification := ""
+
 	if eventSymbols != nil {
 		showNotification = fmt.Sprintf(
 			`Apolo.showNotification = (text) => {%s.default.dispatchEvent(new %s.default("show-notification-bubble", {i18n: text}))};`,
+			
 			eventSymbols[0],
-			eventSymbols[1])
+			eventSymbols[1],
+		)
 	}
 
 	// vazamento localStorage e showNotification
 	input = utils.Replace(
 		input,
+
 		`(const [\w_]+=([\w_]+)\.default\.get\([\w_]+\);)`,
 		`${1}Apolo.LocalStorage=${2}.default;`+showNotification)
 
@@ -351,42 +363,63 @@ func exposeAPIs(input string) string {
 		// se inscreve na fila e defina os dados para Apolo.Queue
 		input = utils.Replace(
 			input,
+
 			`([\w_]+.prototype._player=null)`,
+
 			fmt.Sprintf(
 				`;new %s(%s.resolver,"spotify:internal:queue","queue","1.0.0").subscribeToQueue((e,r)=>{if(e){console.log(e);return;}Apolo.Queue=r.getJSONBody();});${1}`,
 				playerCosmosSymbols[0],
-				playerCosmosSymbols[1]))
+				playerCosmosSymbols[1]),
+			)
 	}
 
 	// vazamento dos métodos addToQueue e removeFromQueue
 	input = utils.Replace(
 		input,
+
 		`(const [\w_]+=function\([\w_]+,[\w_]+\)\{)this\._bridge`,
-		"${1}"+apoloQueueJS+"this._bridge")
+		"${1}"+apoloQueueJS+"this._bridge",
+	)
 
 	// registra o evento de mudança de estado de reprodução/pausa
 	input = utils.Replace(
 		input,
+
 		`this\.playing\([\w_]+\.is_playing&&![\w_]+\.is_paused\).+?;`,
-		`${0}(this.playing()!==this._isPlaying)&&(this._isPlaying=this.playing(),Apolo.Player.dispatchEvent&&Apolo.Player.dispatchEvent(new Event("onplaypause")));`)
+		`${0}(this.playing()!==this._isPlaying)&&(this._isPlaying=this.playing(),Apolo.Player.dispatchEvent&&Apolo.Player.dispatchEvent(new Event("onplaypause")));`,
+	)
 
 	// registra o evento de mudança de música
 	input = utils.Replace(
 		input,
+
 		`this\._uri=[\w_]+\.uri,this\._trackMetadata=[\w_]+\.metadata`,
-		`${0},Apolo.Player.dispatchEvent&&Apolo.Player.dispatchEvent(new Event("songchange"))`)
+		`${0},Apolo.Player.dispatchEvent&&Apolo.Player.dispatchEvent(new Event("songchange"))`,
+	)
+
+	// registra o evento de mundaça de app
+	input = utils.Replace(
+		input,
+
+		`(_onActivate\(\)\{)([\w_]+\.default\.dispatch\([\w_]+\.default\.activatePage)`,
+		`${1}const appChangeEvent=new Event("appchange");appChangeEvent.data=this._state._uri;Spicetify.Player.dispatchEvent(appChangeEvent);${2}`,
+	)
 
 	// vazamento de playbackControl para Apolo.PlaybackControl
 	input = utils.Replace(
 		input,
+
 		`,(([\w_]+)\.playFromPlaylistResolver=)`,
-		`;Apolo.PlaybackControl = ${2};${1}`)
+		`;Apolo.PlaybackControl = ${2};${1}`,
+	)
 
 	// desativa a restrição de função de exposição
 	input = utils.Replace(
 		input,
+
 		`(expose=function.+?)[\w_]+\.__spotify&&[\w_]+\.__spotify\.developer_mode&&`,
-		"${1}")
+		"${1}",
+	)
 
 	return input
 }
@@ -439,7 +472,7 @@ Apolo.Player.removeEventListener = (type, callback) => {
 
     var stack = Apolo.Player.eventListeners[type];
 
-    for (var i = 0, l = stack.length; i < l; i += 1) {
+    for (let i = 0, i = stack.length; i++) {
         if (stack[i] === callback) {
             stack.splice(i, 1);
 
@@ -455,8 +488,10 @@ Apolo.Player.dispatchEvent = (event) => {
 
     var stack = Apolo.Player.eventListeners[event.type];
 
-    for (var i = 0, l = stack.length; i < l; i += 1) {
-        stack[i](event);
+    for (let i = 0; i < stack.length; i++) {
+		if (typeof stack[i] === "function") {
+			stack[i](event);
+		}
     }
 
     return !event.defaultPrevented;
