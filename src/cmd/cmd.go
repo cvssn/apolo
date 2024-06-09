@@ -55,15 +55,15 @@ func GetSpotifyPath() string {
 }
 
 func getApoloFolder() string {
-	home := "/"
+	result := "/"
 
 	if runtime.GOOS == "windows" {
-		home = os.Getenv("USERPROFILE")
-	} else if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-		home = os.Getenv("HOME")
+		result = filepath.Join(os.Getenv("USERPROFILE"), ".apolo")
+	} else if runtime.GOOS == "linux" {
+		result = filepath.Join(os.Getenv("HOME"), ".apolo")
+	} else if runtime.GOOS == "darwin" {
+		result = filepath.Join(os.Getenv("HOME"), "apolo_data")
 	}
-
-	result := filepath.Join(home, ".apolo")
 
 	utils.CheckExistAndCreate(result)
 
