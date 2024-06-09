@@ -1,7 +1,6 @@
 package backup
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,19 +11,8 @@ import (
 // inicializar backup da pasta dos apps de spotify para backuppath
 func Start(apoloPath, backupPath string) error {
 	appsFolder := filepath.Join(spotifyPath, "Apps")
-	
-	utils.RunCopy(appsFolder, backupPath, []string{"*.spa"})
 
-	// limpeza
-	appList, _ := ioutil.ReadDir(backupPath)
-
-	for _, v := range appList {
-		if v.IsDir() {
-			os.RemoveAll(filepath.Join(backupPath, v.Name()))
-		}
-	}
-
-	return nil
+	return utils.Copy(appsFolder, backupPath, false, []string{".spa"})
 }
 
 // extrair todos os arquivos spa de backuppath para extractpath
