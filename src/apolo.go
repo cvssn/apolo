@@ -26,12 +26,6 @@ func init() {
 
 	log.SetFlags(0)
 
-	if len(os.Args) < 2 {
-		help()
-
-		os.Exit(0)
-	}
-
 	quiet := false
 
 	for _, v := range os.Args {
@@ -43,6 +37,12 @@ func init() {
 	}
 
 	cmd.Init(quiet)
+
+	if len(os.Args) < 2 {
+		help()
+
+		os.Exit(0)
+	}
 
 	for k, v := range os.Args {
 		switch v {
@@ -115,7 +115,7 @@ func main() {
 func help() {
 	fmt.Println("apolo v" + version)
 	fmt.Print(`USO
-apolo <comando>
+apolo [<flag>] <comando>
 
 DESCRIÇÃO
 personaliza a interface e a funcionalidade do cliente spotify
@@ -138,6 +138,8 @@ FLAGS
 -c, --config        imprime caminho do arquivo de configuração
 -h, --help          imprime este texto de ajuda
 -v, --version       imprime o número da versão e saia
+
+para informação de configuração, rode "apolo -h config".
 `)
 }
 
