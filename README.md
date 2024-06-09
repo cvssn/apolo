@@ -1,5 +1,17 @@
 # apolo-cli
 
+ferramenta commandline para customizar o cliente do spotify.
+suporta windows, macos e linux.
+
+**features:**
+
+- alterar cores de toda a interface gráfica (ui)
+- injetar css para customização avançada
+- habilitar algumas features adicionais/escondidas
+- remover componentes pesados para melhorar a performance
+
+![mac_demo1](https://i.imgur.com/8njve9b.png)
+
 ## instalação
 
 1. baixe o pacote correto para seu sistema operacional: https://github.com/vwts/apolo/releases
@@ -36,7 +48,7 @@ echo 'apolo=~/apolo/apolo' >> .bashrc
 
 então você pode agora rodar `apolo` em qualquer lugar.
 
-## uso
+## uso básico
 
 rode com o comando uma vez para gerar o arquivo de configuração
 
@@ -44,19 +56,21 @@ rode com o comando uma vez para gerar o arquivo de configuração
 apolo
 ```
 
-então:
+certifique-se que o arquivo de configuração esteja criado com sucesso e que não haja erros, então rode:
 
 ```bash
-apolo backup
+apolo backup apply enable-devtool
 ```
 
-e finalmente:
+por agora, depois de mudar algumas cores em `color.ini` ou no css em `user.css`, apenas rode:
 
 ```bash
-apolo apply
+apolo update
 ```
 
-após alterar o tema de cor, css, rode `apply` novamente
+para atualizar seu tema.
+
+no spotify, pressione <kbd>ctrl</kbd> <kbd>shift</kbd> <kbd>r</kbd> / <kbd>command</kbd> <kbd>shift</kbd> <kbd>r</kbd> para recarregar e receber atualização visual do seu tema.
 
 ## customização
 
@@ -65,7 +79,8 @@ após alterar o tema de cor, css, rode `apply` novamente
 está localizado em:
 
 **windows**: `%userprofile%\.apolo\config.ini`
-**linux e macos**: `~/.apolo/config.ini`
+**linux**: `~/.apolo/config.ini`
+**macos**: `~/apolo_data/config.ini`
 
 #### temas
 
@@ -74,7 +89,8 @@ há 2 locais no qual você pode colocar seus temas:
 1. a pasta `Themes` no diretório home
 
 **windows**: `%userprofile%\.apolo\Themes\`
-**linux e macos**: `~/.apolo/Themes/`
+**linux**: `~/.apolo/Themes/`
+**macos**: `~/apolo_data/Themes`
 
 2. a pasta `Themes` no diretório executável do apolo
 
@@ -102,7 +118,5 @@ go build src/apolo.go
 
 ## em breve
 
-- implementação de features adicionais
 - sass
-- assistir as mudanças de arquivos de temas sendo aplicadas automaticamente
 - injetar extensões para apps customizados
