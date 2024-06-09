@@ -177,32 +177,6 @@ func GetSpotifyVersion(spotifyPath string) string {
 	return version.MustString("")
 }
 
-// setdevtool habilita/desabilita o modo de desenvolvedor no cliente spotify
-func SetDevTool(spotifyPath string, enable bool) {
-	pref, prefFilePath, err := GetPrefsCfg(spotifyPath)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	rootSection, err := pref.GetSection("")
-	
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	devTool := rootSection.Key("app.enable-developer-mode")
-
-	if enable {
-		devTool.SetValue("true")
-	} else {
-		devTool.SetValue("false")
-	}
-
-	ini.PrettyFormat = false
-	pref.SaveTo(prefFilePath)
-}
-
 // runcopy copia todos os arquivos
 // ou usa `filters` para copiar certa quantidade de arquivos
 func RunCopy(from, to string, filters []string) error {
@@ -269,8 +243,11 @@ func RestartSpotify(spotifyPath string) {
 	if runtime.GOOS == "windows" {
 		exec.Command("taskkill", "/F", "/IM", "spotify.exe").Run()
 		exec.Command(filepath.Join(spotifyPath, "spotify.exe")).Start()
-	} else if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+	} else if runtime.GOOS == "linux" {
 		exec.Command("pkill", "spotify").Run()
 		exec.Command(filepath.Join(spotifyPath, "spotify")).Start()
+	} else if runtime.GOOS == "darwin" {
+		exec.Command("pkill", "Spotify").Run()
+		exec.Command("open", "/Application/Spotify.app").Start()
 	}
 }
