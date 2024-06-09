@@ -25,8 +25,7 @@ type Flag struct {
 	VisHighFramerate     bool
 }
 
-
-
+// additionaloptions
 func AdditionalOptions(appsFolderPath string, flags Flag) {
 	appList, err := ioutil.ReadDir(appsFolderPath)
 
@@ -58,6 +57,7 @@ func AdditionalOptions(appsFolderPath string, flags Flag) {
 	}
 }
 
+// usercss
 func UserCSS(appsFolderPath, themeFolder string, injectCSS, customColor bool) {
 	var userCSS string
 
@@ -72,10 +72,10 @@ func UserCSS(appsFolderPath, themeFolder string, injectCSS, customColor bool) {
 	}
 
 	userCSSDestPath := filepath.Join(appsFolderPath, "zlink", "css", "user.css")
-	ioutil.WriteFile(userCSSDestPath, []byte(userCSS), 0644)
+	ioutil.WriteFile(userCSSDestPath, []byte(userCSS), 0700)
 
 	userCSSDestPath = filepath.Join(appsFolderPath, "login", "css", "user.css")
-	ioutil.WriteFile(userCSSDestPath, []byte(userCSS), 0644)
+	ioutil.WriteFile(userCSSDestPath, []byte(userCSS), 0700)
 }
 
 func lyricsMod(jsPath string, flags Flag) {
